@@ -18,7 +18,7 @@ JAVA_OUT=${APP_HOME}/logs/Stirling-PDF-start.log  #应用的启动日志
 mkdir -p ${APP_HOME}
 mkdir -p ${APP_HOME}/logs
 usage() {
-    echo "Usage: $PROG_NAME {start|stop|restart}"
+    echo "Usage: $PROG_NAME {start|stop|restart|monitor}"
     exit 2
 }
 
@@ -79,13 +79,27 @@ stop_application() {
    done
    echo ""
 }
+
+monitor_application() {
+    while true; do
+        checkjavapid=$(ps -ef | grep java | grep ${APP_NAME} | grep -v grep | grep -v 'deploy.sh' | awk '{print \$2}')
+        if [[ ! $checkjavapid ]]; then
+            echo "Java process not found. Restarting application..."
+            start_application
+        fi
+        sleep 10 # Check every 10 seconds
+    done
+}
+
 start() {
     start_application
     # health_check
 }
+
 stop() {
     stop_application
 }
+
 case "$ACTION" in
     start)
         start
@@ -96,6 +110,9 @@ case "$ACTION" in
     restart)
         stop
         start
+    ;;
+    monitor)
+        monitor_application
     ;;
     *)
         usage
